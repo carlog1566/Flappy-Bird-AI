@@ -91,6 +91,8 @@ if __name__ == '__main__':
 
     #     if game_over:
     #         break
+
+    # For Testing
     while True:
         game.play()
 
