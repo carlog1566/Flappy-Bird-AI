@@ -1,2 +1,2 @@
-# Flappy Bird AI
+# Flappy Bird AI (In Development 🛠️)
 **A Flappy Bird game built from scratch using Pygame, combined with Deep Q-Learning (DQN) implemented in PyTorch. The AI progressively learns to play Flappy Bird and improves its score over time.**
