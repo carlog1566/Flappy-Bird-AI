@@ -1,3 +1,4 @@
+# IMPORT LIBRARIES
 import os
 import pygame
 import random
@@ -88,7 +89,7 @@ class FlappyBird():
 
     # COLLISION FUNCTION
     def is_collision(self):
-        # Return True when player hits the ground or 50 units above the roof
+        # Return True when player hits the ground or 50 units above the roof else return False
         if self.player_y > GROUND_Y or self.player_y < -50:
             return True
         return False
@@ -119,6 +120,7 @@ class FlappyBird():
         self.player_y = player_y
         self.player_y_velocity = player_y_velocity
 
+        # Define counter for pipe spawn rate
         self.counter = 0
 
 
@@ -171,7 +173,6 @@ if __name__ == '__main__':
     # For Testing
     # while True:
     #     game.play()
-
 
     pygame.quit()
     exit()
