@@ -37,7 +37,9 @@ class FlappyBird():
 
     # COLLISION FUNCTION
     def is_collision(self):
-        pass
+        if self.player_y > WINDOW_HEIGHT - 100 or self.player_y < -50:
+            return True
+        return False
 
 
     # UPDATE FRAME FUNCTION
@@ -75,6 +77,12 @@ class FlappyBird():
         self.player_y_velocity += GRAVITY
         self.player_y += self.player_y_velocity
 
+        game_over = False
+        if self.is_collision():
+            game_over = True
+            return game_over
+
+
         # Call update function to update frame and set framerate
         self.update()
         self.clock.tick(SPEED)
@@ -86,15 +94,15 @@ if __name__ == '__main__':
     # Create game object (FlappyBird)
     game = FlappyBird()
 
-    # while True:
-    #     game_over, score = game.play
+    while True:
+        game_over = game.play()
 
-    #     if game_over:
-    #         break
+        if game_over:
+            break
 
     # For Testing
-    while True:
-        game.play()
+    # while True:
+    #     game.play()
 
 
     pygame.quit()
