@@ -8,16 +8,20 @@ from sys import exit
 WINDOW_HEIGHT = 800
 WINDOW_WIDTH = 800
 SPEED = 60
-GROUND_Y = WINDOW_HEIGHT - 100
-GROUND_HEIGHT = 50
+GROUND_HEIGHT = 100
+GROUND_Y = WINDOW_HEIGHT - GROUND_HEIGHT
 GRAVITY = 0.5
 
-# DEFINE PLAYER POSITION AND VELOCITY
+# DEFINE PLAYER ATTRIBUTES, POSITION, AND VELOCITY
+player_width = 30
+player_height = 30
 player_x = 200
 player_y = 400
 player_y_velocity = 0
 
-# DEFINE PIPE BEHAVIOR
+# DEFINE PIPE ATTRIBUTES & BEHAVIOR
+pipe_width = 50
+pipe_length = 500
 pipe_gap = 150
 scroll_speed = 3
 spawn_rate = 100
@@ -39,17 +43,17 @@ class Pipe(pygame.sprite.Sprite):
         
         # Create rect for top or bottom pipe
         if pos == 1:
-            self.rect = pygame.Rect((0, 0), (50, 500))
+            self.rect = pygame.Rect((0, 0), (pipe_width, pipe_length))
             self.rect.midbottom = (x, y)
         elif pos == -1:
-            self.rect = pygame.Rect((0, 0), (50, 500))
+            self.rect = pygame.Rect((0, 0), (pipe_width, pipe_length))
             self.rect.midtop = (x, y)
 
 
     # UPDATE PIPE FUNCTION
     def update(self):
         # Display pipe and update x 
-        pygame.draw.rect(self.display, 'Green', self.rect)
+        pygame.draw.rect(self.display, 'chartreuse3', self.rect)
         self.rect.x -= self.scroll_speed
         
         # Erase pipe when the right side reaches x < -10
@@ -90,7 +94,7 @@ class FlappyBird():
     # COLLISION FUNCTION
     def is_collision(self):
         # Return True when player hits the ground or 50 units above the roof or collides with pipe else return False
-        if (self.player_y > GROUND_Y) or (self.player_y < -50):
+        if (self.player_y + player_height > GROUND_Y) or (self.player_y < -100):
             return True
         else:
             # Check each pipe to see if player collided with it
@@ -103,10 +107,10 @@ class FlappyBird():
     # UPDATE FRAME FUNCTION
     def update(self, spawn):
         # Update display & player rect 
-        self.display.fill('Black')
-        self.player_rect = pygame.Rect((self.player_x, self.player_y), (20, 20))
-        pygame.draw.rect(self.display, 'Yellow', self.player_rect)
-
+        self.display.fill((173, 216, 230))
+        self.player_rect = pygame.Rect((self.player_x, self.player_y), (player_width, player_height))
+        pygame.draw.rect(self.display, 'gold1', self.player_rect)
+ 
         # Spawn pipe when spawn is true
         if spawn:
             self.spawn_pipe(pipes)
@@ -114,6 +118,11 @@ class FlappyBird():
 
         # Update all pipes
         pipes.update()
+
+        grass_rect = pygame.Rect((0, WINDOW_HEIGHT - GROUND_HEIGHT), (WINDOW_WIDTH, 20))
+        ground_rect = pygame.Rect((0, WINDOW_HEIGHT - GROUND_HEIGHT), (WINDOW_WIDTH, GROUND_HEIGHT))
+        pygame.draw.rect(self.display, 'antiquewhite2', ground_rect)
+        pygame.draw.rect(self.display, 'chartreuse4', grass_rect)
 
         pygame.display.flip()
 
@@ -174,10 +183,6 @@ if __name__ == '__main__':
 
         if game_over:
             break
-
-    # For Testing
-    # while True:
-    #     game.play()
 
     pygame.quit()
     exit()
