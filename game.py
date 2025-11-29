@@ -9,7 +9,7 @@ WINDOW_HEIGHT = 800
 WINDOW_WIDTH = 800
 SPEED = 60
 GROUND_Y = WINDOW_HEIGHT - 100
-GROUND_HEIGHT = 100
+GROUND_HEIGHT = 50
 GRAVITY = 0.5
 
 # DEFINE PLAYER POSITION AND VELOCITY
@@ -89,9 +89,14 @@ class FlappyBird():
 
     # COLLISION FUNCTION
     def is_collision(self):
-        # Return True when player hits the ground or 50 units above the roof else return False
-        if self.player_y > GROUND_Y or self.player_y < -50:
+        # Return True when player hits the ground or 50 units above the roof or collides with pipe else return False
+        if (self.player_y > GROUND_Y) or (self.player_y < -50):
             return True
+        else:
+            # Check each pipe to see if player collided with it
+            for sprite in pipes:
+                if self.player_rect.colliderect(sprite.rect):
+                    return True
         return False
 
 
@@ -99,8 +104,8 @@ class FlappyBird():
     def update(self, spawn):
         # Update display & player rect 
         self.display.fill('Black')
-        player_rect = pygame.Rect((self.player_x, self.player_y), (20, 20))
-        pygame.draw.rect(self.display, 'Red', player_rect)
+        self.player_rect = pygame.Rect((self.player_x, self.player_y), (20, 20))
+        pygame.draw.rect(self.display, 'Yellow', self.player_rect)
 
         # Spawn pipe when spawn is true
         if spawn:
