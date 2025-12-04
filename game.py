@@ -1,5 +1,4 @@
 # IMPORT LIBRARIES
-import os
 import pygame
 import random
 from sys import exit
@@ -30,6 +29,10 @@ pipes = pygame.sprite.Group()
 # INITIALIZE PYGAME
 pygame.init()
 
+# DEFINE SCORE AND SCORE FONT
+score = 0
+score_font = pygame.font.Font('resources/EXEPixelPerfect.ttf', 100)
+
 
 class Pipe(pygame.sprite.Sprite):
 
@@ -45,9 +48,11 @@ class Pipe(pygame.sprite.Sprite):
         if pos == 1:
             self.rect = pygame.Rect((0, 0), (pipe_width, pipe_length))
             self.rect.midbottom = (x, y)
+            self.passed = False
         elif pos == -1:
             self.rect = pygame.Rect((0, 0), (pipe_width, pipe_length))
             self.rect.midtop = (x, y)
+            self.passed = True
 
 
     # UPDATE PIPE FUNCTION
@@ -55,6 +60,12 @@ class Pipe(pygame.sprite.Sprite):
         # Display pipe and update x 
         pygame.draw.rect(self.display, 'chartreuse3', self.rect)
         self.rect.x -= self.scroll_speed
+
+        # Update score if top pipe has passed the bird
+        global score
+        if (self.rect.right < player_x) and (not self.passed):
+            self.passed = True
+            score += 1
         
         # Erase pipe when the right side reaches x < -10
         if self.rect.right < -10:
@@ -114,11 +125,17 @@ class FlappyBird():
         # Spawn pipe when spawn is true
         if spawn:
             self.spawn_pipe(pipes)
-            print('Pipe Spawned')
 
         # Update all pipes
         pipes.update()
 
+        # Update score text
+        self.score = score
+        score_text = score_font.render(str(self.score), True, 'White')
+        score_rect = score_text.get_rect(center=(WINDOW_WIDTH // 2, 80 ))
+        self.display.blit(score_text, score_rect)
+
+        # Display ground
         grass_rect = pygame.Rect((0, WINDOW_HEIGHT - GROUND_HEIGHT), (WINDOW_WIDTH, 20))
         ground_rect = pygame.Rect((0, WINDOW_HEIGHT - GROUND_HEIGHT), (WINDOW_WIDTH, GROUND_HEIGHT))
         pygame.draw.rect(self.display, 'antiquewhite2', ground_rect)
@@ -134,8 +151,13 @@ class FlappyBird():
         self.player_y = player_y
         self.player_y_velocity = player_y_velocity
 
-        # Define counter for pipe spawn rate
+        # Define counter for pipe spawn rate and empty sprite group
         self.counter = 0
+        pipes.empty()
+
+        # Define score in scope and set it at 0
+        global score
+        score = 0
 
 
     # PLAY FUNCTION
@@ -173,7 +195,7 @@ class FlappyBird():
         self.clock.tick(SPEED)
             
 
-            
+# MAIN   
 if __name__ == '__main__':
     # Create game object (FlappyBird)
     game = FlappyBird()
