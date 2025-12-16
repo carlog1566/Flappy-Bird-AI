@@ -34,9 +34,10 @@ score = 0
 score_font = pygame.font.Font('resources/EXEPixelPerfect.ttf', 100)
 
 
+
 class Pipe(pygame.sprite.Sprite):
 
-    # INITIALIZE PIPE OBJECT
+    # PIPE CONSTRUCTOR
     def __init__(self, x, y, pos, display, scroll_speed):
         # Initialize sprite class and variables
         pygame.sprite.Sprite.__init__(self)
@@ -72,9 +73,10 @@ class Pipe(pygame.sprite.Sprite):
             self.kill()
 
 
+
 class FlappyBird():
 
-    # INITIALIZE GAME
+    # GAME CONSTRUCTOR
     def __init__(self):
         self.w = WINDOW_WIDTH
         self.h = WINDOW_HEIGHT
