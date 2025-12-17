@@ -1,10 +1,13 @@
+# IMPORT LIBRARIES
 import torch
 import random
 import numpy as np
 from gameAI import FlappyBird, Pipe
 from model import Linear_QNet, QTrainer
 
+# DEFINE LEARNING RATE
 LEARNING_RATE = 0.001
+
 
 class Agent:
     

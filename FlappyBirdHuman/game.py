@@ -17,6 +17,7 @@ player_height = 40
 player_x = 200
 player_y = 400
 player_y_velocity = 0
+player_angle = 45
 
 # DEFINE PIPE ATTRIBUTES & BEHAVIOR
 pipe_width = 100
@@ -61,8 +62,7 @@ class Pipe(pygame.sprite.Sprite):
 
     # UPDATE PIPE FUNCTION
     def update(self):
-        # Display pipe and update x 
-        self.display.blit(self.image, self.rect)
+        # Update x
         self.rect.x -= self.scroll_speed
 
         # Update score if top pipe has passed the bird
@@ -75,6 +75,40 @@ class Pipe(pygame.sprite.Sprite):
         if self.rect.right < -10:
             self.kill()
        
+
+
+class Bird(pygame.sprite.Sprite):
+
+    # BIRD CONSTRUCTOR
+    def __init__(self, x, y, y_velocity, display):
+        # Initialize sprite class and variables
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.y_velocity = y_velocity
+        self.angle = player_angle
+        self.display = display
+
+        self.image = pygame.transform.scale(pygame.image.load('./resources/FlappyBird.png').convert_alpha(), (player_width, player_height))
+        self.image = pygame.transform.rotate(self.image, self.angle)
+        self.rect = self.image.get_rect(midbottom=(self.x, self.y))
+
+
+    # FLAP FUNCTION
+    def flap(self):
+        # Set y_velocity and angle
+        self.y_velocity = -10
+        self.angle = 45
+
+
+    # UPDATE BIRD FUNCTION
+    def update(self):
+        # Simulate gravity and make bird more dynamic
+        self.y_velocity += GRAVITY
+        self.y += self.y_velocity
+        if self.y_velocity > 0 and self.angle > -90:
+            self.angle -= 3
+
 
 
 class FlappyBird():
@@ -109,31 +143,42 @@ class FlappyBird():
 
     # COLLISION FUNCTION
     def is_collision(self):
-        # Return True when player hits the ground or 50 units above the roof or collides with pipe else return False
-        if (self.player_y + player_height > GROUND_Y) or (self.player_y < -100):
+        # Return True when player hits the ground or 100 units above the roof or collides with pipe else return False
+        collided = pygame.sprite.spritecollide(self.player, pipes, False)
+        if collided or (self.player.y > GROUND_Y) or (self.player.y < -100):
             return True
-        else:
-            # Check each pipe to see if player collided with it
-            for sprite in pipes:
-                if self.player_rect.colliderect(sprite.rect):
-                    return True
         return False
 
 
     # UPDATE FRAME FUNCTION
-    def update(self, spawn):
-        # Update display & player rect 
+    def update(self):
+        # Update display
         self.display.fill((173, 216, 230))
-        self.player_image = pygame.transform.scale(pygame.image.load('./resources/FlappyBird.png').convert_alpha(), (player_width, player_height))
-        self.player_rect = self.player_image.get_rect(topleft=(self.player_x, self.player_y))
-        self.display.blit(self.player_image, self.player_rect)
- 
-        # Spawn pipe when spawn is true
-        if spawn:
-            self.spawn_pipe(pipes)
 
-        # Update all pipes
-        pipes.update()
+        # Update pipes & player if not game_over, else just update player
+        if not self.game_over:
+            self.player.update()
+ 
+            if self.counter >= spawn_rate:
+                self.spawn_pipe(pipes)
+                self.counter = 0
+            else:
+                self.counter += 1
+
+            pipes.update() 
+        else:
+            if self.player.y < GROUND_Y:
+                self.player.update()
+        
+        # Update pipes
+        for pipe in pipes:
+            self.display.blit(pipe.image, pipe.rect) 
+
+        # Update bird/player
+        self.player.image = pygame.transform.scale(pygame.image.load('./resources/FlappyBird.png').convert_alpha(), (player_width, player_height))
+        self.player.image = pygame.transform.rotate(self.player.image, self.player.angle)
+        self.player.rect = self.player.image.get_rect(midbottom=(self.player.x, self.player.y))
+        self.display.blit(self.player.image, self.player.rect)
 
         # Update score text
         self.score = score
@@ -147,15 +192,16 @@ class FlappyBird():
         pygame.draw.rect(self.display, 'antiquewhite2', ground_rect)
         pygame.draw.rect(self.display, 'chartreuse4', grass_rect)
 
+        # Display all updates
         pygame.display.flip()
 
 
     # RESET GAME FUNCTION
     def reset(self):
-        # Define player x, y, and y velocity
-        self.player_x = player_x
-        self.player_y = player_y
-        self.player_y_velocity = player_y_velocity
+        # Create player from Bird class and set spawn and game_over
+        self.player = Bird(player_x, player_y, player_y_velocity, self.display)
+        self.spawn = True
+        self.game_over = False
 
         # Define counter for pipe spawn rate and empty sprite group
         self.counter = 0
@@ -175,29 +221,16 @@ class FlappyBird():
                 exit()
             
             # Update y velocity as spacebar is pressed
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and not self.game_over:
                 if event.key == pygame.K_SPACE:
-                    self.player_y_velocity = -10
+                    self.player.flap()
         
-        # Simulate flappy bird physics via y velocity and gravity
-        self.player_y_velocity += GRAVITY
-        self.player_y += self.player_y_velocity
+        # Check for collision
+        if not self.game_over and self.is_collision():
+            self.game_over = True
 
-        # Set game_over equal to false; if collision game_over = true and game ends
-        game_over = False
-        if self.is_collision():
-            game_over = True
-            return game_over
-
-        # Update frame and spawn pipe if counter >= spawn_rate
-        if self.counter >= spawn_rate:
-            self.update(True)
-            self.counter = 0
-        else:
-            self.update(False)
-            self.counter += 1
-
-        # Framerate
+        # Update frame & set framerate
+        self.update()
         self.clock.tick(SPEED)
             
 
@@ -207,10 +240,4 @@ if __name__ == '__main__':
     game = FlappyBird()
 
     while True:
-        game_over = game.play()
-
-        if game_over:
-            break
-
-    pygame.quit()
-    exit()
+        game.play()
