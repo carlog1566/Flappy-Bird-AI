@@ -29,10 +29,8 @@ spawn_rate = 100
 # INITIALIZE PYGAME
 pygame.init()
 
-# DEFINE SCORE AND SCORE FONT
-score = 0
+# DEFINE SCORE FONT
 score_font = pygame.font.Font('resources/EXEPixelPerfect.ttf', 100)
-
 
 
 class Pipe(pygame.sprite.Sprite):
@@ -42,17 +40,18 @@ class Pipe(pygame.sprite.Sprite):
         # Initialize sprite class and variables
         pygame.sprite.Sprite.__init__(self)
         self.x = x
+        self.pos = pos
         self.scroll_speed = scroll_speed
         self.display = display
 
         
         # Create rect for top or bottom pipe
-        if pos == 1:
+        if self.pos == 1:
             self.image = pygame.image.load('./resources/Pipe.png').convert_alpha()
             self.image = pygame.transform.scale(self.image, (pipe_width, pipe_length)) 
             self.rect = self.image.get_rect(bottomleft=(x, y))
             self.passed = False
-        elif pos == -1:
+        elif self.pos == -1:
             self.image = pygame.transform.flip(pygame.image.load('./resources/Pipe.png').convert_alpha(), False, True)
             self.image = pygame.transform.scale(self.image, (pipe_width, pipe_length))
             self.rect = self.image.get_rect(topleft=(x, y))  
@@ -63,12 +62,6 @@ class Pipe(pygame.sprite.Sprite):
     def update(self):
         # Update x
         self.rect.x -= self.scroll_speed
-
-        # Update score if top pipe has passed the bird
-        global score
-        if (self.rect.right < player_x) and (not self.passed):
-            self.passed = True
-            score += 1
         
         # Erase pipe when the right side reaches x < -10
         if self.rect.right < -10:
@@ -183,7 +176,6 @@ class FlappyBird():
         self.display.blit(self.player.image, self.player.rect)
 
         # Update score text
-        self.score = score
         score_text = score_font.render(str(self.score), True, 'White')
         score_rect = score_text.get_rect(center=(WINDOW_WIDTH // 2, 80 ))
         self.display.blit(score_text, score_rect)
@@ -209,37 +201,42 @@ class FlappyBird():
         self.counter = 0
         self.pipes = pygame.sprite.Group()
 
-        # Define score in scope and set it at 0
-        global score
-        score = 0
+        # Define score & reward and set it at 0
+        self.score = 0
+        self.reward = 0
 
 
     # PLAY FUNCTION
-    def play(self):
+    def play(self, action):
         for event in pygame.event.get():
             # Quit game via exiting out of tab
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            
-            # Update y velocity as spacebar is pressed
-            if event.type == pygame.KEYDOWN and not self.game_over:
-                if event.key == pygame.K_SPACE:
-                    self.player.flap()
-        
-        # Check for collision
+
+        # Set default reward for staying alive to 10
+        self.reward = 10
+
+        # Make bird flap depending on action
+        if action[1] == 1:
+            self.player.flap()
+
+        # Update score and reward if bird passes pipe
+        for pipe in self.pipes:
+            if (pipe.pos == 1) and (pipe.rect.right < self.player.rect.left) and (not pipe.passed):
+                pipe.passed = True
+                self.score += 1
+                self.reward = 1000
+
+        # Check for collision & set reward to -1000 and return if collision
         if not self.game_over and self.is_collision():
             self.game_over = True
+            self.reward = -1000
+            return self.reward, self.game_over, self.score
 
         # Update frame & set framerate
         self.update()
         self.clock.tick(SPEED)
-            
-
-# MAIN   
-if __name__ == '__main__':
-    # Create game object (FlappyBird)
-    game = FlappyBird()
-
-    while True:
-        game.play()
+        
+        # Return reward, game_over, and score
+        return self.reward, self.game_over, self.score
