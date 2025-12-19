@@ -12,8 +12,8 @@ GROUND_Y = WINDOW_HEIGHT - GROUND_HEIGHT
 GRAVITY = 0.5
 
 # DEFINE PLAYER ATTRIBUTES, POSITION, AND VELOCITY
-player_width = 55
-player_height = 40
+player_width = 50
+player_height = 35
 player_x = 200
 player_y = 400
 player_y_velocity = 0
@@ -25,7 +25,6 @@ pipe_length = 400
 pipe_gap = 200
 scroll_speed = 3
 spawn_rate = 100
-pipes = pygame.sprite.Group()
 
 # INITIALIZE PYGAME
 pygame.init()
@@ -117,7 +116,7 @@ class FlappyBird():
     def __init__(self):
         self.w = WINDOW_WIDTH
         self.h = WINDOW_HEIGHT
-
+    
         # Initialize Display
         self.display = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('Flappy Bird')
@@ -144,7 +143,7 @@ class FlappyBird():
     # COLLISION FUNCTION
     def is_collision(self):
         # Return True when player hits the ground or 100 units above the roof or collides with pipe else return False
-        collided = pygame.sprite.spritecollide(self.player, pipes, False)
+        collided = pygame.sprite.spritecollide(self.player, self.pipes, False)
         if collided or (self.player.y > GROUND_Y) or (self.player.y < -100):
             return True
         return False
@@ -154,24 +153,27 @@ class FlappyBird():
     def update(self):
         # Update display
         self.display.fill((173, 216, 230))
-
+        
         # Update pipes & player if not game_over, else just update player
         if not self.game_over:
             self.player.update()
- 
+
+            if len(self.pipes) == 0:
+                self.spawn_pipe(self.pipes) 
+
             if self.counter >= spawn_rate:
-                self.spawn_pipe(pipes)
+                self.spawn_pipe(self.pipes)
                 self.counter = 0
             else:
                 self.counter += 1
 
-            pipes.update() 
+            self.pipes.update() 
         else:
             if self.player.y < GROUND_Y:
                 self.player.update()
         
         # Update pipes
-        for pipe in pipes:
+        for pipe in self.pipes:
             self.display.blit(pipe.image, pipe.rect) 
 
         # Update bird/player
@@ -205,7 +207,7 @@ class FlappyBird():
 
         # Define counter for pipe spawn rate and empty sprite group
         self.counter = 0
-        pipes.empty()
+        self.pipes = pygame.sprite.Group()
 
         # Define score in scope and set it at 0
         global score
