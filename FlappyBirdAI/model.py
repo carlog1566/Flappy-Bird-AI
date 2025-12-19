@@ -25,7 +25,7 @@ class Linear_QNet(nn.Module):
     # SAVE FUNCTION
     def save(self, file_name='model.pth'):
         # Save final model
-        model_folder_path = './model'
+        model_folder_path = './FlappyBirdAI/model/'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
@@ -62,7 +62,7 @@ class QTrainer:
 
         # Predict Q-values, copy for loss calculation
         pred = self.model(state)
-        target = pred.clone()
+        target = pred.clone().detach()
 
         # Update Q-values using Bellman Equation
         for i in range(len(done)):
@@ -70,7 +70,8 @@ class QTrainer:
             if not done[i]:
                 Q_new = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
 
-            target[i][torch.argmax(action).item()] = Q_new
+            action_idx = torch.argmax(action[i]).item()
+            target[i][action_idx] = Q_new
 
         # Reset gradients, compute loss via mean squared error, backpropagate loss, update weights
         self.optimizer.zero_grad()
