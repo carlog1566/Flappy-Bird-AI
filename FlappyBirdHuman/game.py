@@ -10,6 +10,7 @@ SPEED = 60
 GROUND_HEIGHT = 100
 GROUND_Y = WINDOW_HEIGHT - GROUND_HEIGHT
 GRAVITY = 0.5
+VELOCITY_CAP = 15
 
 # DEFINE PLAYER ATTRIBUTES, POSITION, AND VELOCITY
 player_width = 50
@@ -103,7 +104,8 @@ class Bird(pygame.sprite.Sprite):
     # UPDATE BIRD FUNCTION
     def update(self):
         # Simulate gravity and make bird more dynamic
-        self.y_velocity += GRAVITY
+        if self.y_velocity < VELOCITY_CAP :
+            self.y_velocity += GRAVITY
         self.y += self.y_velocity
         if self.y_velocity > 0 and self.angle > -90:
             self.angle -= 3

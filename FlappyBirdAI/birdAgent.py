@@ -21,15 +21,16 @@ class Agent:
         self.gamma = 0.9
         self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(5, 128, 2)  # States: x dist from pipe, y dist to bottom of top pipe, y dist to top of bottom pipe, player y, player y velocity; Output: don't jump or jump
+        self.trainer = QTrainer(self.model, learning_rate=LEARNING_RATE, gamma=self.gamma)
 
 
     # GET STATE FUNCTION
     def get_state(self, game):
         bird = game.player
 
-        # Calculate y and velocity
-        bird_velocity = bird.y_velocity
-        bird_y = bird.y
+        # Calculate and normalize y and velocity ([-1, 1])
+        bird_velocity = (2 * (bird.y_velocity + 10) / 25) - 1    # Velocity -> [-10, 15]
+        bird_y = (2 * (bird.y + 100) / 900) - 1   # y -> [-100, 800]
 
         # Store all pipe pairs ahead of the bird
         pipes_ahead = [pipe for pipe in game.pipes if pipe.rect.right > bird.rect.left]
@@ -50,10 +51,10 @@ class Agent:
                     top_pipe = next_pipe
                     bottom_pipe = pipe
 
-        # Calculate and normalize x and y dist to pipe/center gap
-        x_dist = (top_pipe.rect.left - bird.rect.right)
-        top_dist = (bird.rect.top - top_pipe.rect.bottom)
-        bot_dist = (bottom_pipe.rect.top - bird.rect.bottom)
+        # Calculate and normalize x and y dist to pipe/center gap ([-1, 1])
+        x_dist = (2 * (top_pipe.rect.left - bird.rect.right) / game.w) - 1
+        top_dist = (2 * (bird.rect.top - top_pipe.rect.bottom) / game.h) - 1
+        bot_dist = (2 * (bottom_pipe.rect.top - bird.rect.bottom) / game.h) - 1
 
         # Store and return state as np array
         state = [x_dist, top_dist, bot_dist, bird_y, bird_velocity]
@@ -128,7 +129,7 @@ def train():
         reward, game_over, score = game.play(final_move)
         state_new = agent.get_state(game)
 
-        print('Move:', final_move, 'Reward:', reward)
+        print('Move:', final_move, 'Reward:', reward, 'Current State:', state_old)
 
         # Train on the most recent experience
         agent.train_short_memory(state_old, final_move, reward, state_new, game_over)

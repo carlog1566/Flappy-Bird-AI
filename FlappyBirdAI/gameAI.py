@@ -9,6 +9,7 @@ WINDOW_WIDTH = 800
 SPEED = 60
 GROUND_HEIGHT = 100
 GROUND_Y = WINDOW_HEIGHT - GROUND_HEIGHT
+MAX_HEIGHT = -100
 GRAVITY = 0.5
 
 # DEFINE PLAYER ATTRIBUTES, POSITION, AND VELOCITY
@@ -96,7 +97,8 @@ class Bird(pygame.sprite.Sprite):
     # UPDATE BIRD FUNCTION
     def update(self):
         # Simulate gravity and make bird more dynamic
-        self.y_velocity += GRAVITY
+        if self.y_velocity < 10:
+            self.y_velocity += GRAVITY
         self.y += self.y_velocity
         if self.y_velocity > 0 and self.angle > -90:
             self.angle -= 3
@@ -137,7 +139,7 @@ class FlappyBird():
     def is_collision(self):
         # Return True when player hits the ground or 100 units above the roof or collides with pipe else return False
         collided = pygame.sprite.spritecollide(self.player, self.pipes, False)
-        if collided or (self.player.y > GROUND_Y) or (self.player.y < -100):
+        if collided or (self.player.y > GROUND_Y) or (self.player.y < MAX_HEIGHT):
             return True
         return False
 
@@ -226,7 +228,7 @@ class FlappyBird():
             if (pipe.pos == 1) and (pipe.rect.right < self.player.rect.left) and (not pipe.passed):
                 pipe.passed = True
                 self.score += 1
-                self.reward = 1000
+                self.reward += 100
 
         # Check for collision & set reward to -1000 and return if collision
         if not self.game_over and self.is_collision():
