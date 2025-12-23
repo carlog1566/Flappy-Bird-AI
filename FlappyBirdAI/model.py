@@ -37,10 +37,11 @@ class Linear_QNet(nn.Module):
 class QTrainer:
 
     # INITIALIZE TRAINER
-    def __init__(self, model, learning_rate, gamma):
+    def __init__(self, model, target_model, learning_rate, gamma):
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.model = model
+        self.target_model = target_model
         self.optimizer = optim.Adam(model.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
 
@@ -68,9 +69,14 @@ class QTrainer:
         for i in range(len(done)):
             Q_new = reward[i]
             if not done[i]:
-                Q_new = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
+                # Select best next action with main model, evaluate with target model, compute Q-value using Bellman equation
+                next_action = torch.argmax(self.model(next_state[i])).item()
+                Q_next = self.target_model(next_state[i])[next_action]
+                Q_new = reward[i] + self.gamma * Q_next
 
-            action_idx = torch.argmax(action[i]).item()
+            # Convert action into an index and update target Q_value for the chosen action
+            action = torch.tensor(action, dtype=torch.long)
+            action_idx = action[i].item()
             target[i][action_idx] = Q_new
 
         # Reset gradients, compute loss via mean squared error, backpropagate loss, update weights

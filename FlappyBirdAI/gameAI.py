@@ -139,7 +139,7 @@ class FlappyBird():
     def is_collision(self):
         # Return True when player hits the ground or 100 units above the roof or collides with pipe else return False
         collided = pygame.sprite.spritecollide(self.player, self.pipes, False)
-        if collided or (self.player.y > GROUND_Y) or (self.player.y < MAX_HEIGHT):
+        if collided or (self.player.rect.bottom > GROUND_Y) or (self.player.rect.top < MAX_HEIGHT):
             return True
         return False
 
@@ -216,11 +216,12 @@ class FlappyBird():
                 pygame.quit()
                 exit()
 
-        # Set default reward for staying alive to 10
-        self.reward = 10
+        # Set default reward for staying alive to 0.1
+        self.reward = 0.1
 
-        # Make bird flap depending on action
-        if action[1] == 1:
+        # Make bird flap depending on action, decrease reward per flap so it is used wisely
+        if action == 1:
+            self.reward -= 0.02
             self.player.flap()
 
         # Update score and reward if bird passes pipe
@@ -228,12 +229,12 @@ class FlappyBird():
             if (pipe.pos == 1) and (pipe.rect.right < self.player.rect.left) and (not pipe.passed):
                 pipe.passed = True
                 self.score += 1
-                self.reward += 100
+                self.reward = 1
 
-        # Check for collision & set reward to -1000 and return if collision
+        # Check for collision, set reward to -1 and return if collision
         if not self.game_over and self.is_collision():
             self.game_over = True
-            self.reward = -1000
+            self.reward = -1
             return self.reward, self.game_over, self.score
 
         # Update frame & set framerate
